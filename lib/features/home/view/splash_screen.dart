@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:weatherly/features/home/view/weather_screen.dart';
 
 
 class SplashScreen extends StatelessWidget {
@@ -9,7 +10,7 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Future.delayed(const Duration(seconds: 3), () {
-      //Get.offAll(() => const WeatherScreen());
+      Get.offAll(() => const WeatherScreen());
     });
 
     return const Scaffold(

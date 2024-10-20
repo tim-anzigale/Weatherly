@@ -14,9 +14,9 @@ class WeatherRepository extends GetxService {
     String units = 'metric',
     String lang = 'en',
   }) async {
-    final String baseUrl = Environment.openWeatherBaseUrl;
+    
     final String apiKey = Environment.openWeatherApiKey;
-    final String uri = '$baseUrl${Environment.oneCallUrl}';
+    final String uri = Environment.oneCallUrl;
     final Map<String, String> queryParams = {
       'lat': lat.toString(),
       'lon': lon.toString(),
@@ -36,9 +36,9 @@ class WeatherRepository extends GetxService {
     String units = 'metric',
     String lang = 'en',
   }) async {
-    final String baseUrl = Environment.openWeatherBaseUrl;
+    
     final String apiKey = Environment.openWeatherApiKey;
-    final String uri = '$baseUrl${Environment.timeMachineUrl}';
+    final String uri = Environment.timeMachineUrl;
     final Map<String, String> queryParams = {
       'lat': lat.toString(),
       'lon': lon.toString(),

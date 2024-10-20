@@ -3,8 +3,8 @@
 *.log
 *.pyc
 *.swp
+*.env
 .DS_Store
-.env
 .atom/
 .buildlog/
 .history
