@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:weatherly/core/base_widgets/custom_search_bar.dart';
 import 'package:weatherly/core/controllers/geocoding_controller.dart';
+import 'package:weatherly/core/controllers/geonames_controller.dart';
 import 'package:weatherly/core/controllers/weather_controller.dart';
+import 'package:weatherly/core/models/cities_model.dart';
 import 'package:weatherly/core/services/geolocator_service.dart';
-import 'package:weatherly/core/utils/cities.dart';
 import 'package:weatherly/features/home/view/widgets/current_weather_display.dart';
 import 'package:weatherly/features/home/view/widgets/daily_forecast.dart';
 import 'package:weatherly/features/home/view/widgets/hourly_forecast.dart';
-
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -20,39 +21,41 @@ class WeatherScreen extends StatefulWidget {
 class _WeatherScreenState extends State<WeatherScreen> {
   final WeatherController weatherController = Get.find<WeatherController>();
   final GeocodingController geocodingController = Get.find<GeocodingController>();
+  final GeoNamesController geoNamesController = Get.find<GeoNamesController>();
 
-  String? selectedCity;
-  String? cityName;
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadWeather();
+    _loadWeather(); // Load weather on initialization
+    print(':::::::::::::::::::::::::::::::::WeatherScreen initialized');
   }
 
-  Future<void> _loadWeather({String? city}) async {
+  Future<void> _loadWeather() async {
     try {
       double? latitude;
       double? longitude;
 
-      if (city != null && city != 'Use My Location') {
-        await geocodingController.fetchCoordinates(city);
+      // Check if a city has been selected from the search
+      String selectedCity = geoNamesController.selectedCityName.value;
+      if (selectedCity.isNotEmpty) {
+        await geocodingController.fetchCoordinates(selectedCity);
         latitude = geocodingController.coordinates['lat'];
         longitude = geocodingController.coordinates['lon'];
       } else {
+        // Fallback to current location if no city is selected
         Position position = await getCurrentLocation();
         latitude = position.latitude;
         longitude = position.longitude;
-        selectedCity = 'Use My Location';
+        geoNamesController.selectCity('Current Location'); // Update selected city
       }
 
       await weatherController.fetchWeatherData(latitude!, longitude!);
 
-      if (city == null || city == 'Use My Location') {
+      // Fetch city name if selected city is empty
+      if (selectedCity.isEmpty) {
         await geocodingController.fetchCityName(latitude, longitude);
-        cityName = geocodingController.cityName.value;
-      } else {
-        cityName = city;
       }
     } catch (e) {
       weatherController.errorMessage.value = e.toString();
@@ -63,44 +66,36 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         title: Row(
           children: [
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Center(
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      isExpanded: false,
-                      value: selectedCity,
-                      hint: const Text('Select a City'),
-                      items: [
-                        const DropdownMenuItem<String>(
-                          value: 'Use My Location',
-                          child: Text('My Location'),
-                        ),
-                        ...kenyanCities.map((String city) {
-                          return DropdownMenuItem<String>(
-                            value: city,
-                            child: Text(city),
-                          );
-                        }).toList(),
-                      ],
-                      onChanged: (newValue) {
-                        setState(() {
-                          selectedCity = newValue;
-                        });
-                        _loadWeather(city: newValue);
-                      },
-                    ),
-                  ),
-                ),
+                child: Obx(() => CustomSearchBar(
+                  controller: searchController,
+                  onChanged: (String query) {
+                    geoNamesController.searchCities(query); // Update search results
+                  },
+                  onClear: () => searchController.clear(),
+                  hintText: 'Search for cities...',
+                  searchResults: geoNamesController.searchResults
+                      .map<String>((result) => result['name'] as String)
+                      .toList(),
+                  onResultSelected: (String city) {
+                    // Get the selected city details from search results
+                    final selectedCity = geoNamesController.searchResults.firstWhere((result) => result['name'] == city);
+                    final citySearchResult = CitySearchResult.fromMap(selectedCity);
+
+                    geoNamesController.selectCity(city);
+                    weatherController.fetchWeatherForCity(citySearchResult); // Fetch weather for the selected city
+                    searchController.clear(); // Clear the input after selection
+                  },
+                )),
               ),
             ),
             IconButton(
               icon: const Icon(Icons.location_on),
-              onPressed: () => _loadWeather(),
+              onPressed: () => _loadWeather(), // Refresh weather based on location
             ),
           ],
         ),
@@ -117,8 +112,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
               children: [
                 CurrentWeatherDisplay(
                   weatherData: weatherController.weatherData,
-                  cityName: cityName,
-                  onRefresh: () => _loadWeather(city: selectedCity),
+                  cityName: geoNamesController.selectedCityName.value,
+                  onRefresh: () => _loadWeather(),
                 ),
                 const SizedBox(height: 10.0),
                 HourlyForecast(weatherData: weatherController.weatherData),
@@ -128,7 +123,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             ),
           );
         } else {
-          return const Center(child: Text('No weather data available'));
+          return const Center(child: Text('No weather data available.'));
         }
       }),
     );

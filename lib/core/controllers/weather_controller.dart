@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
+import 'package:weatherly/core/models/cities_model.dart';
 import 'package:weatherly/data/remote/api_checker.dart';
 import 'package:weatherly/data/repositories/weather_repository.dart';
+
 
 class WeatherController extends GetxController {
   final WeatherRepository weatherRepository;
@@ -26,6 +28,15 @@ class WeatherController extends GetxController {
       errorMessage.value = 'An error occurred: $e'; // Set error message for caught exceptions
     } finally {
       isLoading.value = false; // Stop loading
+    }
+  }
+
+  /// Fetch weather data based on the selected city
+  Future<void> fetchWeatherForCity(CitySearchResult city) async {
+    if (city.latitude != null && city.longitude != null) {
+      await fetchWeatherData(city.latitude!, city.longitude!);
+    } else {
+      errorMessage.value = 'Invalid city coordinates.';
     }
   }
 

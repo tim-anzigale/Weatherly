@@ -14,9 +14,9 @@ class WeatherRepository extends GetxService {
     String units = 'metric',
     String lang = 'en',
   }) async {
-    
     final String apiKey = Environment.openWeatherApiKey;
-    final String uri = Environment.oneCallUrl;
+    final String uri =
+        '${Environment.openWeatherBaseUrl}${Environment.oneCallUrl}';
     final Map<String, String> queryParams = {
       'lat': lat.toString(),
       'lon': lon.toString(),
@@ -25,8 +25,7 @@ class WeatherRepository extends GetxService {
       'lang': lang,
       if (exclude != null) 'exclude': exclude,
     };
-     return apiClient.getWithParamsData(uri, queryParams: queryParams);
-    
+    return apiClient.getWithParamsData(uri, queryParams: queryParams);
   }
 
   Future<Response> fetchWeatherByTimestamp({
@@ -36,9 +35,8 @@ class WeatherRepository extends GetxService {
     String units = 'metric',
     String lang = 'en',
   }) async {
-    
     final String apiKey = Environment.openWeatherApiKey;
-    final String uri = Environment.timeMachineUrl;
+    final String uri = '${Environment.openWeatherBaseUrl}${Environment.timeMachineUrl}';
     final Map<String, String> queryParams = {
       'lat': lat.toString(),
       'lon': lon.toString(),
@@ -48,6 +46,5 @@ class WeatherRepository extends GetxService {
       'lang': lang,
     };
     return apiClient.getWithParamsData(uri, queryParams: queryParams);
-  
   }
 }

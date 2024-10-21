@@ -19,16 +19,19 @@ class ApiClient {
   }
 
   Future<Response> getData(String uri) async {
+    debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
     return _handleApiCall(
-      http.get(Uri.parse('$baseUrl$uri'), headers: _mainHeaders),
+      http.get(Uri.parse(uri), headers: _mainHeaders),
       uri,
     );
   }
 
   Future<Response> getWithParamsData(String uri, {required Map<String, String> queryParams}) async {
+    debugPrint(
+          '====> API Call: $uri\nHeader: $_mainHeaders\nParams: $queryParams');
     return _handleApiCall(
       http.get(
-        Uri.parse('$baseUrl$uri').replace(queryParameters: queryParams),
+        Uri.parse(uri).replace(queryParameters: queryParams),
         headers: _mainHeaders,
       ),
       uri,
@@ -37,7 +40,7 @@ class ApiClient {
 
   Future<Response> postData(String uri, dynamic body) async {
     return _handleApiCall(
-      http.post(Uri.parse('$baseUrl$uri'), headers: _mainHeaders, body: jsonEncode(body)),
+      http.post(Uri.parse(uri), headers: _mainHeaders, body: jsonEncode(body)),
       uri,
     );
   }
@@ -45,7 +48,7 @@ class ApiClient {
   Future<Response> postWithParamsData(String uri, dynamic body, {required Map<String, String> queryParams}) async {
     return _handleApiCall(
       http.post(
-        Uri.parse('$baseUrl$uri').replace(queryParameters: queryParams),
+        Uri.parse(uri).replace(queryParameters: queryParams),
         headers: _mainHeaders,
         body: jsonEncode(body),
       ),
@@ -55,6 +58,7 @@ class ApiClient {
 
   Future<Response> _handleApiCall(Future<http.Response> apiCall, String uri) async {
     try {
+      
       http.Response response = await apiCall.timeout(
         const Duration(seconds: ApiConstants.timeoutInSeconds),
       );
