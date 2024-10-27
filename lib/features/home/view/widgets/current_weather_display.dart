@@ -27,7 +27,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
     return GlassMorphism(
       blur: 20.0,
       opacity: 0.1,
-      color: Color.fromARGB(255, 106, 50, 50),
+      color: const Color.fromARGB(255, 106, 50, 50),
       borderRadius: BorderRadius.circular(12.0),
       child: Container(
         margin: const EdgeInsets.all(16.0),
@@ -38,15 +38,15 @@ class CurrentWeatherDisplay extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (cityName != null)
-                  Text(
-                    cityName!,
-                    style: const TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 25, 22, 22),
-                    ),
+                // Display the city name or 'Current Location' as a fallback
+                Text(
+                  cityName ?? 'Current Location',
+                  style: const TextStyle(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 25, 22, 22),
                   ),
+                ),
                 IconButton(
                   icon: const Icon(Icons.refresh, color: Color.fromARGB(255, 109, 57, 57)),
                   onPressed: onRefresh,
@@ -69,7 +69,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
                   'https://openweathermap.org/img/wn/$icon.png',
                   width: 50,
                   height: 50,
-                  color: Color.fromARGB(255, 162, 132, 132),
+                  color: const Color.fromARGB(255, 162, 132, 132),
                   colorBlendMode: BlendMode.srcATop,
                 ),
                 const SizedBox(width: 16.0),

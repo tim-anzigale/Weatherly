@@ -17,7 +17,7 @@ class GeoNamesRepository extends GetxService {
     final String uri = '${Environment.geoNamesBaseUrl}${Environment.geoNamesSearchUrl}';
 
     final Map<String, String> queryParams = {
-      'q': query,
+      'name': query,
       'maxRows': maxRows.toString(),
       'lang': lang,
       'username': username,

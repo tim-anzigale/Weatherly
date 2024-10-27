@@ -14,7 +14,7 @@ class ApiChecker {
 
     switch (response.statusCode) {
       case 200:
-        _showSuccess(ApiConstants.defaultSuccessMessage);
+        //_showSuccess(ApiConstants.defaultSuccessMessage);
         break;
       case 401:
         errorMessage = ApiConstants.unauthorizedMessage;

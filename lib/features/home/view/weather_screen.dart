@@ -32,35 +32,35 @@ class _WeatherScreenState extends State<WeatherScreen> {
     print(':::::::::::::::::::::::::::::::::WeatherScreen initialized');
   }
 
-  Future<void> _loadWeather() async {
-    try {
-      double? latitude;
-      double? longitude;
+Future<void> _loadWeather() async {
+  weatherController.isLoading.value = true; // Start loading indicator
+  try {
+    double? latitude;
+    double? longitude;
 
-      // Check if a city has been selected from the search
-      String selectedCity = geoNamesController.selectedCityName.value;
-      if (selectedCity.isNotEmpty) {
-        await geocodingController.fetchCoordinates(selectedCity);
-        latitude = geocodingController.coordinates['lat'];
-        longitude = geocodingController.coordinates['lon'];
-      } else {
-        // Fallback to current location if no city is selected
-        Position position = await getCurrentLocation();
-        latitude = position.latitude;
-        longitude = position.longitude;
-        geoNamesController.selectCity('Current Location'); // Update selected city
-      }
+    String selectedCity = geoNamesController.selectedCityName.value;
+    if (selectedCity.isNotEmpty) {
+      await geocodingController.fetchCoordinates(selectedCity);
+      latitude = geocodingController.coordinates['lat'];
+      longitude = geocodingController.coordinates['lon'];
+    } else {
+      Position position = await getCurrentLocation();
+      latitude = position.latitude;
+      longitude = position.longitude;
 
-      await weatherController.fetchWeatherData(latitude!, longitude!);
-
-      // Fetch city name if selected city is empty
-      if (selectedCity.isEmpty) {
-        await geocodingController.fetchCityName(latitude, longitude);
-      }
-    } catch (e) {
-      weatherController.errorMessage.value = e.toString();
+      // Set city name to the current location's name
+      await geocodingController.fetchCityName(latitude, longitude);
+      geoNamesController.selectedCityName.value = geocodingController.cityName.value;
     }
+
+    await weatherController.fetchWeatherData(latitude!, longitude!);
+  } catch (e) {
+    weatherController.errorMessage.value = e.toString();
+  } finally {
+    weatherController.isLoading.value = false; // Stop loading indicator
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +74,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 child: Obx(() => CustomSearchBar(
                   controller: searchController,
                   onChanged: (String query) {
-                    geoNamesController.searchCities(query); // Update search results
+                    geoNamesController.searchCities(query);
                   },
                   onClear: () => searchController.clear(),
                   hintText: 'Search for cities...',
@@ -82,20 +82,20 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       .map<String>((result) => result['name'] as String)
                       .toList(),
                   onResultSelected: (String city) {
-                    // Get the selected city details from search results
-                    final selectedCity = geoNamesController.searchResults.firstWhere((result) => result['name'] == city);
+                    final selectedCity = geoNamesController.searchResults
+                        .firstWhere((result) => result['name'] == city);
                     final citySearchResult = CitySearchResult.fromMap(selectedCity);
 
                     geoNamesController.selectCity(city);
-                    weatherController.fetchWeatherForCity(citySearchResult); // Fetch weather for the selected city
-                    searchController.clear(); // Clear the input after selection
+                    weatherController.fetchWeatherForCity(citySearchResult);
+                    searchController.clear();
                   },
                 )),
               ),
             ),
             IconButton(
               icon: const Icon(Icons.location_on),
-              onPressed: () => _loadWeather(), // Refresh weather based on location
+              onPressed: () => _loadWeather(),
             ),
           ],
         ),
@@ -106,21 +106,25 @@ class _WeatherScreenState extends State<WeatherScreen> {
         } else if (weatherController.errorMessage.value.isNotEmpty) {
           return Center(child: Text(weatherController.errorMessage.value));
         } else if (weatherController.weatherData.isNotEmpty) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-            child: Column(
-              children: [
-                CurrentWeatherDisplay(
-                  weatherData: weatherController.weatherData,
-                  cityName: geoNamesController.selectedCityName.value,
-                  onRefresh: () => _loadWeather(),
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                child: Column(
+                  children: [
+                    CurrentWeatherDisplay(
+                      weatherData: weatherController.weatherData,
+                      cityName: geoNamesController.selectedCityName.value,
+                      onRefresh: () => _loadWeather(),
+                    ),
+                    const SizedBox(height: 10.0),
+                    HourlyForecast(weatherData: weatherController.weatherData),
+                    const SizedBox(height: 10.0),
+                    DailyForecast(weatherData: weatherController.weatherData),
+                  ],
                 ),
-                const SizedBox(height: 10.0),
-                HourlyForecast(weatherData: weatherController.weatherData),
-                const SizedBox(height: 10.0),
-                DailyForecast(weatherData: weatherController.weatherData),
-              ],
-            ),
+              ),
+            ],
           );
         } else {
           return const Center(child: Text('No weather data available.'));

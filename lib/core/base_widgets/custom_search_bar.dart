@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class CustomSearchBar extends StatelessWidget {
+class CustomSearchBar extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback? onClear;
@@ -19,71 +19,114 @@ class CustomSearchBar extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.search, color: Colors.grey),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  onChanged: onChanged,
-                  decoration: InputDecoration(
-                    hintText: hintText,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                ),
-              ),
-              if (controller.text.isNotEmpty)
-                GestureDetector(
-                  onTap: onClear ?? () => controller.clear(),
-                  child: const Icon(Icons.clear, color: Colors.grey),
-                ),
-            ],
-          ),
-        ),
-        // Display search results dropdown
-        if (searchResults.isNotEmpty) 
-          Container(
-            margin: const EdgeInsets.only(top: 8), // Spacing between the search bar and dropdown
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
+  _CustomSearchBarState createState() => _CustomSearchBarState();
+}
+
+class _CustomSearchBarState extends State<CustomSearchBar> {
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    super.dispose();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  void _showOverlay() {
+    _removeOverlay();
+    _overlayEntry = _createOverlayEntry();
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  OverlayEntry _createOverlayEntry() {
+    RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+
+    return OverlayEntry(
+      builder: (context) => Positioned(
+        width: size.width,
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          offset: Offset(0, size.height + 8.0),
+          child: Material(
+            elevation: 4.0,
+            borderRadius: BorderRadius.circular(8),
             child: ListView.builder(
+              padding: EdgeInsets.zero,
               shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: searchResults.length,
+              itemCount: widget.searchResults.length,
               itemBuilder: (context, index) {
-                final city = searchResults[index];
+                final city = widget.searchResults[index];
                 return ListTile(
                   title: Text(city),
                   onTap: () {
-                    onResultSelected(city); // Notify the parent about the selected city
-                    controller.clear(); // Clear the input after selection
+                    widget.onResultSelected(city);
+                    widget.controller.clear();
+                    _removeOverlay();
                   },
                 );
               },
             ),
           ),
-      ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search, color: Colors.grey),
+                Expanded(
+                  child: TextField(
+                    controller: widget.controller,
+                    onChanged: (query) {
+                      widget.onChanged(query);
+                      if (query.isNotEmpty && widget.searchResults.isNotEmpty) {
+                        _showOverlay();
+                      } else {
+                        _removeOverlay();
+                      }
+                    },
+                    decoration: InputDecoration(
+                      hintText: widget.hintText,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+                ),
+                if (widget.controller.text.isNotEmpty)
+                  GestureDetector(
+                    onTap: () {
+                      widget.onClear?.call();
+                      widget.controller.clear();
+                      _removeOverlay();
+                    },
+                    child: const Icon(Icons.clear, color: Colors.grey),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
