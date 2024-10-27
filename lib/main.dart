@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const GetMaterialApp(
-      title: 'Weather App',
+      title: 'Weatherly',
       //theme: customTheme,
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,

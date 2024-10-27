@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:weatherly/core/base_widgets/custom_search_bar.dart';
@@ -102,7 +103,10 @@ Future<void> _loadWeather() async {
       ),
       body: Obx(() {
         if (weatherController.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: SpinKitWaveSpinner(
+                                      color: Colors.white,
+                                            size: 100.0,
+                                                 ));
         } else if (weatherController.errorMessage.value.isNotEmpty) {
           return Center(child: Text(weatherController.errorMessage.value));
         } else if (weatherController.weatherData.isNotEmpty) {

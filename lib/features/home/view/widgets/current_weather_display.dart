@@ -53,80 +53,72 @@ class CurrentWeatherDisplay extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8.0),
-            const Text(
-              'Current Weather',
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 63, 57, 57),
-              ),
-            ),
-            const SizedBox(height: 8.0),
+            const SizedBox(height: 16.0),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.network(
                   'https://openweathermap.org/img/wn/$icon.png',
-                  width: 50,
-                  height: 50,
-                  color: const Color.fromARGB(255, 162, 132, 132),
-                  colorBlendMode: BlendMode.srcATop,
+                  width: 60,
+                  height: 60,
                 ),
                 const SizedBox(width: 16.0),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Text(
+                  '$temp°C',
+                  style: const TextStyle(
+                    fontSize: 40.0,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 168, 143, 143),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8.0),
+            Center(
+              child: Text(
+                description,
+                style: const TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.w400,
+                  color: Color.fromARGB(255, 117, 96, 96),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      '$temp°C',
-                      style: const TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w600,
-                        color: Color.fromARGB(255, 168, 143, 143),
-                      ),
+                    const Icon(
+                      Icons.speed,
+                      color: Color.fromARGB(255, 142, 108, 108),
                     ),
+                    const SizedBox(width: 8.0),
                     Text(
-                      description,
+                      'Wind: $windSpeed m/s',
                       style: const TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w400,
-                        color: Color.fromARGB(255, 117, 96, 96),
+                        fontSize: 14.0,
+                        color: Color.fromARGB(255, 116, 91, 91),
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 8.0),
-            Row(
-              children: [
-                const Icon(
-                  Icons.speed,
-                  color: Color.fromARGB(255, 142, 108, 108),
-                ),
-                const SizedBox(width: 8.0),
-                Text(
-                  'Wind Speed: $windSpeed m/s',
-                  style: const TextStyle(
-                    fontSize: 14.0,
-                    color: Color.fromARGB(255, 116, 91, 91),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4.0),
-            Row(
-              children: [
-                const Icon(
-                  Icons.water_drop,
-                  color: Color.fromARGB(255, 139, 113, 113),
-                ),
-                const SizedBox(width: 8.0),
-                Text(
-                  'Humidity: $humidity%',
-                  style: const TextStyle(
-                    fontSize: 14.0,
-                    color: Color.fromARGB(255, 133, 108, 108),
-                  ),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.water_drop,
+                      color: Color.fromARGB(255, 139, 113, 113),
+                    ),
+                    const SizedBox(width: 8.0),
+                    Text(
+                      'Humidity: $humidity%',
+                      style: const TextStyle(
+                        fontSize: 14.0,
+                        color: Color.fromARGB(255, 133, 108, 108),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

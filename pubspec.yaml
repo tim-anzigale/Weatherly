@@ -20,6 +20,7 @@ dependencies:
   permission_handler: ^11.3.1
   intl: ^0.19.0
   geolocator: ^13.0.1
+  flutter_spinkit: ^5.2.1
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -35,5 +36,5 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/weather_app.png
+    - assets/images/
     - .env

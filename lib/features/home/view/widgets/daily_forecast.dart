@@ -29,44 +29,47 @@ class DailyForecast extends StatelessWidget {
             final dt = DateTime.fromMillisecondsSinceEpoch(day['dt'] * 1000);
             final dayOfWeek = DateFormat('EEEE').format(dt);
 
-            return GlassMorphism(
-              blur: 20.0,
-              opacity: 0.1,
-              color: Color.fromARGB(255, 151, 84, 84),
-              borderRadius: BorderRadius.circular(12.0),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Image.network(
-                      'https://openweathermap.org/img/wn/$icon.png',
-                      width: 50,
-                      height: 50,
-                    ),
-                    const SizedBox(width: 16.0),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          dayOfWeek,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 32, 29, 29),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 13.0), // Add spacing between items
+              child: GlassMorphism(
+                blur: 20.0,
+                opacity: 0.1,
+                color: Color.fromARGB(255, 151, 84, 84),
+                borderRadius: BorderRadius.circular(12.0),
+                child: Container(
+                 
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    children: [
+                      Image.network(
+                        'https://openweathermap.org/img/wn/$icon.png',
+                        width: 50,
+                        height: 50,
+                      ),
+                      const SizedBox(width: 16.0),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            dayOfWeek,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromARGB(255, 32, 29, 29),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8.0),
-                        Text(
-                          'High: $tempMax°C, Low: $tempMin°C',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Color.fromARGB(255, 74, 69, 69),
+                          const SizedBox(height: 8.0),
+                          Text(
+                            'High: $tempMax°C, Low: $tempMin°C',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Color.fromARGB(255, 74, 69, 69),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
