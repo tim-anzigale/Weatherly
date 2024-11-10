@@ -1,13 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:weatherly/core/base_widgets/custom_search_bar.dart';
-import 'package:weatherly/core/controllers/geocoding_controller.dart';
 import 'package:weatherly/core/controllers/geonames_controller.dart';
 import 'package:weatherly/core/controllers/weather_controller.dart';
-import 'package:weatherly/core/models/cities_model.dart';
-import 'package:weatherly/core/services/geolocator_service.dart';
 import 'package:weatherly/features/home/view/widgets/current_weather_display.dart';
 import 'package:weatherly/features/home/view/widgets/daily_forecast.dart';
 import 'package:weatherly/features/home/view/widgets/hourly_forecast.dart';
@@ -21,47 +18,32 @@ class WeatherScreen extends StatefulWidget {
 
 class _WeatherScreenState extends State<WeatherScreen> {
   final WeatherController weatherController = Get.find<WeatherController>();
-  final GeocodingController geocodingController = Get.find<GeocodingController>();
   final GeoNamesController geoNamesController = Get.find<GeoNamesController>();
-
   final TextEditingController searchController = TextEditingController();
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _loadWeather(); // Load weather on initialization
-    print(':::::::::::::::::::::::::::::::::WeatherScreen initialized');
+    weatherController.fetchWeatherForCurrentLocation();
   }
 
-Future<void> _loadWeather() async {
-  weatherController.isLoading.value = true; // Start loading indicator
-  try {
-    double? latitude;
-    double? longitude;
-
-    String selectedCity = geoNamesController.selectedCityName.value;
-    if (selectedCity.isNotEmpty) {
-      await geocodingController.fetchCoordinates(selectedCity);
-      latitude = geocodingController.coordinates['lat'];
-      longitude = geocodingController.coordinates['lon'];
-    } else {
-      Position position = await getCurrentLocation();
-      latitude = position.latitude;
-      longitude = position.longitude;
-
-      // Set city name to the current location's name
-      await geocodingController.fetchCityName(latitude, longitude);
-      geoNamesController.selectedCityName.value = geocodingController.cityName.value;
-    }
-
-    await weatherController.fetchWeatherData(latitude!, longitude!);
-  } catch (e) {
-    weatherController.errorMessage.value = e.toString();
-  } finally {
-    weatherController.isLoading.value = false; // Stop loading indicator
+  @override
+  void dispose() {
+    searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
   }
-}
 
+  /// Debounce search to reduce API calls
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (query.isNotEmpty && query.length >= 3) {
+        geoNamesController.searchCities(query);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,66 +54,72 @@ Future<void> _loadWeather() async {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Obx(() => CustomSearchBar(
-                  controller: searchController,
-                  onChanged: (String query) {
-                    geoNamesController.searchCities(query);
-                  },
-                  onClear: () => searchController.clear(),
-                  hintText: 'Search for cities...',
-                  searchResults: geoNamesController.searchResults
-                      .map<String>((result) => result['name'] as String)
-                      .toList(),
-                  onResultSelected: (String city) {
-                    final selectedCity = geoNamesController.searchResults
-                        .firstWhere((result) => result['name'] == city);
-                    final citySearchResult = CitySearchResult.fromMap(selectedCity);
-
-                    geoNamesController.selectCity(city);
-                    weatherController.fetchWeatherForCity(citySearchResult);
-                    searchController.clear();
-                  },
-                )),
+                child: Obx(
+                  () => CustomSearchBar(
+                    controller: searchController,
+                    onChanged: _onSearchChanged,
+                    onClear: () {
+                      searchController.clear();
+                      geoNamesController.searchResults.clear();
+                    },
+                    hintText: 'Search for cities...',
+                    searchResults: geoNamesController.searchResults
+                        .map<String>((result) => result.name)
+                        .toList(),
+                    onResultSelected: (String city) async {
+                      final selectedCity = geoNamesController.searchResults
+                          .firstWhere((result) => result.name == city);
+                      geoNamesController.selectCity(selectedCity);
+                      await weatherController.fetchWeatherForCity(selectedCity);
+                      searchController.clear();
+                    },
+                  ),
+                ),
               ),
             ),
             IconButton(
               icon: const Icon(Icons.location_on),
-              onPressed: () => _loadWeather(),
+              onPressed: () => weatherController.fetchWeatherForCurrentLocation(),
             ),
           ],
         ),
       ),
       body: Obx(() {
         if (weatherController.isLoading.value) {
-          return const Center(child: SpinKitWaveSpinner(
-                                      color: Colors.white,
-                                            size: 100.0,
-                                                 ));
+          return const Center(
+            child: SpinKitWaveSpinner(
+              color: Colors.blue,
+              size: 70.0,
+            ),
+          );
         } else if (weatherController.errorMessage.value.isNotEmpty) {
-          return Center(child: Text(weatherController.errorMessage.value));
+          return Center(
+            child: Text(
+              weatherController.errorMessage.value,
+              style: const TextStyle(color: Colors.red, fontSize: 18),
+            ),
+          );
         } else if (weatherController.weatherData.isNotEmpty) {
-          return Stack(
-            children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-                child: Column(
-                  children: [
-                    CurrentWeatherDisplay(
-                      weatherData: weatherController.weatherData,
-                      cityName: geoNamesController.selectedCityName.value,
-                      onRefresh: () => _loadWeather(),
-                    ),
-                    const SizedBox(height: 10.0),
-                    HourlyForecast(weatherData: weatherController.weatherData),
-                    const SizedBox(height: 10.0),
-                    DailyForecast(weatherData: weatherController.weatherData),
-                  ],
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+            child: Column(
+              children: [
+                CurrentWeatherDisplay(
+                  weatherData: weatherController.weatherData,
+                  cityName: weatherController.selectedCityName.value,
+                  onRefresh: () => weatherController.fetchWeatherForCurrentLocation(),
                 ),
-              ),
-            ],
+                const SizedBox(height: 10.0),
+                HourlyForecast(weatherData: weatherController.weatherData),
+                const SizedBox(height: 10.0),
+                DailyForecast(weatherData: weatherController.weatherData),
+              ],
+            ),
           );
         } else {
-          return const Center(child: Text('No weather data available.'));
+          return const Center(
+            child: Text('No weather data available.'),
+          );
         }
       }),
     );

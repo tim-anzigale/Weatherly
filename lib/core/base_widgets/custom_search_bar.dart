@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:weatherly/core/controllers/geonames_controller.dart';
 
 class CustomSearchBar extends StatefulWidget {
   final TextEditingController controller;
@@ -25,6 +27,20 @@ class CustomSearchBar extends StatefulWidget {
 class _CustomSearchBarState extends State<CustomSearchBar> {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Use GetX's "ever" method to listen for changes to the searchResults list
+    ever(Get.find<GeoNamesController>().searchResults, (_) {
+      if (widget.searchResults.isNotEmpty) {
+        _showOverlay();
+      } else {
+        _removeOverlay();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -100,7 +116,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                     controller: widget.controller,
                     onChanged: (query) {
                       widget.onChanged(query);
-                      if (query.isNotEmpty && widget.searchResults.isNotEmpty) {
+                      if (query.isNotEmpty) {
                         _showOverlay();
                       } else {
                         _removeOverlay();

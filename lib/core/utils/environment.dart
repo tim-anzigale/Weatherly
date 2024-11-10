@@ -26,7 +26,7 @@ class Environment {
   static String get geocodingReverseUrl => '/geo/1.0/reverse';
 
   //Geo names endpoints 
-  static String get geoNamesSearchUrl => '/searchJSON'; // For searching cities
+  static String get geoNamesSearchUrl => '/cities/search'; // For searching cities
   static String get geoNamesReverseUrl => '/findNearbyJSON'; // For reverse geocoding (optional)
 
 }

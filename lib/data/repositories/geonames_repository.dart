@@ -7,22 +7,15 @@ class GeoNamesRepository extends GetxService {
 
   GeoNamesRepository({required this.apiClient});
 
-  Future<Response> searchCity({
-    required String query,
-    int maxRows = 10,
-    String lang = 'en',
-  }) async {
-
-    final String username = Environment.geoNamesUsername;
+  // Function to search cities by name using the backend endpoint
+  Future<Response> searchCity(String query) async {
     final String uri = '${Environment.geoNamesBaseUrl}${Environment.geoNamesSearchUrl}';
-
+    
+    // Pass the query as a parameter to the backend
     final Map<String, String> queryParams = {
       'name': query,
-      'maxRows': maxRows.toString(),
-      'lang': lang,
-      'username': username,
     };
 
-    return apiClient.getWithParamsData(uri, queryParams: queryParams);
+    return await apiClient.getWithParamsData(uri, queryParams: queryParams);
   }
 }
